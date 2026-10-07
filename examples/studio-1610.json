@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "app": "simulador-3d-ambientes",
+  "project": {
+    "name": "Studio 1610 - Pilar's House"
+  },
+  "environment": {
+    "width": 3.56,
+    "length": 4.67,
+    "height": 2.6,
+    "wallThickness": 0.15
+  },
+  "player": {
+    "height": 1.75,
+    "width": 0.45,
+    "depth": 0.3,
+    "walkSpeed": 1.4,
+    "runSpeed": 3,
+    "fov": 70,
+    "spawnX": 1.2,
+    "spawnZ": 4.1,
+    "spawnRotation": 180
+  },
+  "settings": {
+    "gridStep": 0.1,
+    "snapToGrid": false,
+    "showCeiling": true,
+    "showLabels": true
+  },
+  "walls": [
+    {
+      "id": "wall-bath-left",
+      "name": "Banheiro - parede esquerda",
+      "length": 1.73,
+      "height": 2.6,
+      "thickness": 0.07,
+      "x": 1.765,
+      "y": 0,
+      "z": 3.805,
+      "rotation": 90
+    },
+    {
+      "id": "wall-bath-top",
+      "name": "Banheiro - parede superior",
+      "length": 1.83,
+      "height": 2.6,
+      "thickness": 0.07,
+      "x": 2.645,
+      "y": 0,
+      "z": 2.975,
+      "rotation": 0
+    },
+    {
+      "id": "wall-duct-left",
+      "name": "Duto - face esquerda",
+      "length": 0.48,
+      "height": 2.6,
+      "thickness": 0.05,
+      "x": 2.835,
+      "y": 0,
+      "z": 4.43,
+      "rotation": 90
+    },
+    {
+      "id": "wall-duct-top",
+      "name": "Duto - face superior",
+      "length": 0.75,
+      "height": 2.6,
+      "thickness": 0.05,
+      "x": 3.185,
+      "y": 0,
+      "z": 4.165,
+      "rotation": 0
+    }
+  ],
+  "doors": [
+    {
+      "id": "door-entrance",
+      "name": "Porta de entrada 80x210",
+      "wallId": "perimeter-north",
+      "offset": 2.49,
+      "width": 0.8,
+      "height": 2.1,
+      "thickness": 0.04,
+      "isOpen": false,
+      "hinge": "left",
+      "swing": 1
+    },
+    {
+      "id": "door-bath",
+      "name": "Porta do banheiro 60x210",
+      "wallId": "wall-bath-left",
+      "offset": 0.46,
+      "width": 0.6,
+      "height": 2.1,
+      "thickness": 0.04,
+      "isOpen": false,
+      "hinge": "left",
+      "swing": 1
+    }
+  ],
+  "windows": [
+    {
+      "id": "window-studio",
+      "name": "Janela 140x150 (peitoril 70)",
+      "wallId": "perimeter-south",
+      "offset": 1.93,
+      "width": 1.4,
+      "height": 1.5,
+      "sillHeight": 0.7
+    },
+    {
+      "id": "window-bath",
+      "name": "Janela 60x60 (peitoril 160)",
+      "wallId": "wall-duct-top",
+      "offset": 0.375,
+      "width": 0.6,
+      "height": 0.6,
+      "sillHeight": 1.6
+    }
+  ],
+  "objects": [
+    {
+      "id": "object-shaft",
+      "kind": "column",
+      "name": "Shaft técnico",
+      "width": 0.74,
+      "height": 2.6,
+      "depth": 0.18,
+      "x": 3.19,
+      "y": 0,
+      "z": 3.1,
+      "rotation": 0,
+      "color": "#9aa3ab"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room-bath",
+      "name": "Banheiro",
+      "width": 1.76,
+      "length": 1.66,
+      "x": 2.68,
+      "z": 3.84,
+      "color": "#7fb3d5"
+    },
+    {
+      "id": "room-studio",
+      "name": "Studio",
+      "width": 3.56,
+      "length": 2.94,
+      "x": 1.78,
+      "z": 1.47,
+      "color": "#a9cf8f"
+    }
+  ]
+}

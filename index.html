@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulador 3D de Ambientes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Three.js (MIT) via CDN; o mapa de importação permite usar "three" e "three/addons" nos módulos -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+    <div id="app" class="app" data-mode="build" data-view="3d">
+        <header class="topbar">
+            <div class="brand">
+                <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M4 22 L16 28 L28 22 L28 10 L16 4 L4 10 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                    <path d="M4 10 L16 16 L28 10 M16 16 L16 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                </svg>
+                <div class="brand-text">
+                    <span class="brand-name">Simulador 3D</span>
+                    <span class="project-name" id="project-name"></span>
+                </div>
+            </div>
+
+            <div class="mode-switch" role="group" aria-label="Modo">
+                <button type="button" data-mode-button="build" aria-pressed="true">Construir</button>
+                <button type="button" data-mode-button="explore" aria-pressed="false">Explorar</button>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="segmented build-only" role="group" aria-label="Vista">
+                    <button type="button" data-view="3d" aria-pressed="true" title="Vista 3D (V)">3D</button>
+                    <button type="button" data-view="plan" aria-pressed="false" title="Vista Planta, de cima (V)">Planta</button>
+                </div>
+                <div class="segmented segmented-gizmo build-only" role="group" aria-label="Ferramenta de transformação">
+                    <button type="button" data-gizmo="translate" aria-pressed="true" title="Mover (G)">Mover</button>
+                    <button type="button" data-gizmo="rotate" aria-pressed="false" title="Girar (R)">Girar</button>
+                </div>
+                <button type="button" class="button build-only" id="btn-section" aria-pressed="false" title="Corte horizontal: esconde forros, tetos e o que estiver acima da altura do corte (C)">Corte</button>
+                <div class="history build-only" role="group" aria-label="Histórico">
+                    <button type="button" class="button button-icon" id="btn-undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer" disabled>↶</button>
+                    <button type="button" class="button button-icon" id="btn-redo" title="Refazer (Ctrl+Shift+Z)" aria-label="Refazer" disabled>↷</button>
+                </div>
+                <button type="button" class="button" id="btn-export">Exportar</button>
+                <button type="button" class="button" id="btn-import">Importar</button>
+                <button type="button" class="button button-quiet" id="btn-new">Novo</button>
+                <input type="file" id="file-import" accept=".json,application/json" hidden>
+            </div>
+        </header>
+
+        <aside class="toolbar" aria-label="Ferramentas">
+            <section class="tool-section">
+                <h2 class="tool-heading">Planta de fundo</h2>
+                <button type="button" class="tool tool-wide tool-accent" id="tool-plan-import">Importar planta (imagem ou PDF)</button>
+                <div class="tool-grid">
+                    <button type="button" class="tool" data-tool="calibrate" aria-pressed="false">Calibrar escala</button>
+                    <button type="button" class="tool" data-tool="align" aria-pressed="false">Alinhar canto</button>
+                </div>
+                <button type="button" class="tool tool-wide tool-gap" id="tool-plan-adjust">Ajustar planta</button>
+                <input type="file" id="file-plan" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf" hidden>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Estrutura</h2>
+                <div class="tool-grid">
+                    <button type="button" class="tool" data-tool="wall" aria-pressed="false">Desenhar paredes</button>
+                    <button type="button" class="tool" data-tool="measure" aria-pressed="false" title="Trena (M)">Trena</button>
+                </div>
+                <button type="button" class="tool-link" id="tool-clear-measure">Limpar medidas da trena</button>
+                <div class="tool-grid">
+                    <button type="button" class="tool" id="tool-wall">+ Parede</button>
+                    <button type="button" class="tool" id="tool-room">+ Cômodo</button>
+                    <button type="button" class="tool" id="tool-door">+ Porta</button>
+                    <button type="button" class="tool" id="tool-window">+ Janela</button>
+                </div>
+                <p class="tool-hint">Portas e janelas entram na parede selecionada ou, sem seleção, na parede superior.</p>
+                <button type="button" class="tool tool-wide tool-person" id="tool-player">Personagem e escala</button>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Arrumações</h2>
+                <select id="layout-select" class="layout-select" aria-label="Arrumação em edição"></select>
+                <div class="tool-grid tool-gap">
+                    <button type="button" class="tool" id="layout-new">Nova cópia</button>
+                    <button type="button" class="tool" id="layout-rename">Renomear</button>
+                    <button type="button" class="tool" id="layout-compare">Comparar</button>
+                    <button type="button" class="tool" id="layout-delete">Excluir</button>
+                </div>
+                <button type="button" class="tool tool-wide tool-gap" id="layout-sheet">Exportar folha da planta (PNG)</button>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Minha biblioteca</h2>
+                <div id="library-list" class="library-list"></div>
+                <div class="library-actions">
+                    <button type="button" class="tool-link" id="library-export">Exportar biblioteca</button>
+                    <button type="button" class="tool-link" id="library-import">Importar biblioteca</button>
+                </div>
+                <input type="file" id="file-library" accept=".json,application/json" hidden>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Móveis <span class="tool-unit">L × P × A, em metros</span></h2>
+                <div class="catalog" id="catalog"></div>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Instalações e elementos técnicos</h2>
+                <div class="catalog" id="catalog-technical"></div>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Objeto personalizado</h2>
+                <form id="custom-form" class="custom-form" novalidate>
+                    <label class="mini-field mini-field-wide">Nome <input name="name" type="text" value="Minha mesa" autocomplete="off"></label>
+                    <label class="mini-field">Largura <input name="width" type="text" inputmode="decimal" value="1,40"></label>
+                    <label class="mini-field">Altura <input name="height" type="text" inputmode="decimal" value="0,75"></label>
+                    <label class="mini-field">Profund. <input name="depth" type="text" inputmode="decimal" value="0,60"></label>
+                    <button type="submit" class="tool tool-wide">Criar bloco</button>
+                </form>
+            </section>
+
+            <section class="tool-section">
+                <h2 class="tool-heading">Elementos</h2>
+                <div id="outliner" class="outliner"></div>
+            </section>
+        </aside>
+
+        <main class="viewport" id="viewport">
+            <div class="viewport-canvas" id="viewport-canvas"></div>
+
+            <div class="statusbar build-only">
+                <span id="status-cursor" class="status-cursor"></span>
+                <span id="status-hint" class="status-hint">Arraste para girar a vista, botão direito para deslocar, roda para aproximar.</span>
+            </div>
+
+            <div class="hud explore-only" aria-live="polite">
+                <div class="crosshair" aria-hidden="true"></div>
+                <p class="hud-prompt" id="hud-prompt" hidden><kbd>E</kbd> abrir ou fechar a porta</p>
+                <div class="hud-panel">
+                    <span id="hud-position"></span>
+                    <span id="hud-eyes"></span>
+                    <span id="hud-speed"></span>
+                </div>
+            </div>
+
+            <div class="overlay" id="explore-overlay" hidden>
+                <div class="overlay-card">
+                    <h2 id="overlay-title">Explorar em primeira pessoa</h2>
+                    <p id="overlay-scale" class="overlay-scale"></p>
+                    <dl class="keys">
+                        <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Andar</dd></div>
+                        <div><dt>Mouse</dt><dd>Olhar ao redor</dd></div>
+                        <div><dt><kbd>Shift</kbd></dt><dd>Correr</dd></div>
+                        <div><dt><kbd>Espaço</kbd></dt><dd>Pular</dd></div>
+                        <div><dt><kbd>E</kbd></dt><dd>Abrir ou fechar porta</dd></div>
+                        <div><dt><kbd>Esc</kbd></dt><dd>Pausar; de novo para construir</dd></div>
+                    </dl>
+                    <div class="overlay-actions">
+                        <button type="button" class="button button-primary" id="btn-enter">Entrar no ambiente</button>
+                        <button type="button" class="button" id="btn-back-build">Voltar a construir</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="inspector" aria-label="Propriedades">
+            <div id="panel" class="panel"></div>
+        </aside>
+    </div>
+
+    <div class="start-screen" id="start-screen" hidden>
+        <div class="start-card">
+            <div class="tape" aria-hidden="true"></div>
+            <h1 class="start-title">Entre no espaço antes de ele existir.</h1>
+            <p class="start-lead">Informe as medidas internas em metros. O ambiente é criado em escala real e você pode caminhar dentro dele com a sua altura.</p>
+            <form id="start-form" class="start-form" novalidate>
+                <label class="start-field start-field-wide">Nome do projeto
+                    <input name="name" type="text" value="Meu Studio" autocomplete="off" required>
+                </label>
+                <label class="start-field">Largura
+                    <span class="start-input"><input name="width" type="text" inputmode="decimal" value="5,00" required><span>m</span></span>
+                </label>
+                <label class="start-field">Comprimento
+                    <span class="start-input"><input name="length" type="text" inputmode="decimal" value="8,00" required><span>m</span></span>
+                </label>
+                <label class="start-field">Altura do ambiente
+                    <span class="start-input"><input name="height" type="text" inputmode="decimal" value="2,70" required><span>m</span></span>
+                </label>
+                <p class="start-error" id="start-error" role="alert"></p>
+                <div class="start-presets" id="start-presets" aria-label="Medidas de exemplo"></div>
+                <div class="start-actions">
+                    <button type="submit" class="button button-primary button-large">Criar ambiente</button>
+                    <button type="button" class="button" id="start-import">Importar projeto</button>
+                    <button type="button" class="button button-quiet" id="start-resume" hidden></button>
+                </div>
+            </form>
+            <p class="start-note">Largura e comprimento de 0,5 a 100 m; altura de 1 a 20 m.</p>
+        </div>
+    </div>
+
+    <div class="fatal-error" id="fatal-error" hidden>
+        <p>Não foi possível iniciar o 3D. Verifique se o WebGL está ativado no navegador e se a página foi aberta por um servidor local (veja o README).</p>
+    </div>
+
+    <dialog class="dialog" id="number-dialog">
+        <form method="dialog" class="dialog-form">
+            <h2 class="dialog-title" data-role="title"></h2>
+            <p class="dialog-message" data-role="message"></p>
+            <span class="start-input"><input type="text" inputmode="decimal" autocomplete="off" aria-label="Valor"><span data-role="unit"></span></span>
+            <p class="field-error" data-role="error" role="alert"></p>
+            <div class="dialog-actions">
+                <button type="submit" class="button" value="cancel" formnovalidate>Cancelar</button>
+                <button type="submit" class="button button-primary" value="ok">Aplicar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
